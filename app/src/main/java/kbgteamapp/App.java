@@ -10,18 +10,27 @@ public class App {
         App app = new App();
         int choice = 0;
         Scanner in = new Scanner(System.in);
-        System.out.println("Welcome to the Kivotos Battlegrounds Team App\n");
+        System.out.println("Welcome to the Kivotos Battlegrounds Team App");
         while (choice != -1) {
-            System.out.print("Current Players:\n" + app.getPlayers() + "\n\n1) Add Players\n" +
-                    "2) Remove Players\n" +
-                    "3) Randomize Teams\n" +
-                    "4) Choose Teams\n" +
-                    "5) Show Teams\n" +
-                    "6) Clear Players / Reset Teams\n" +
-                    "7) Remove Song\n" +
-                    "8) Sort Playlist\n" +
-                    "9) Exit\n" +
-                    ">> ");
+            if (!app.getPlayers().isEmpty()) {
+                System.out.print("Current Players:\n" + app.getPlayers() + "\n");
+            }
+            if (!app.getPlayersTeams().isEmpty()) {
+                System.out.print("Current Players in Teams:\n" + app.getPlayersTeams() + "\n");
+            }
+            if (app.getTeamCaptainsExist()) {
+                System.out.println("Team Captains: " + app.getTeamCaptains(1) + " and " + app.getTeamCaptains(2));
+            }
+            System.out.print(
+                    "\n1) Add Players\n" +
+                            "2) Remove Players\n" +
+                            "3) Randomize Teams\n" +
+                            "4) Choose Teams\n" +
+                            "5) Show Teams\n" +
+                            "6) Roll Team Captains\n" +
+                            "7) Clear Players / Reset Teams\n" +
+                            "8) Exit\n" +
+                            ">> ");
             try {
                 choice = in.nextInt();
                 in.nextLine(); // Consume the newline character
@@ -48,13 +57,19 @@ public class App {
                         break;
                     case 3:
                         app.randomizeTeams();
-                        clearScreen();
+                        break;
+                    case 4:
+                        app.chooseTeams();
                         break;
                     case 5:
                         app.showTeams();
-                        clearScreen();
                         break;
                     case 6:
+                        app.teamCaptainRoll();
+                        System.out.println("Team Captains: " + app.getTeamCaptains(1) + " and " + app.getTeamCaptains(2));
+                        clearScreen();
+                        break;
+                    case 7:
                         System.out.print("Would you like to clear the player list or reset the teams? (1/2) >> ");
                         int n = in.nextInt();
                         in.nextLine(); // Consume the newline character
@@ -65,8 +80,9 @@ public class App {
                             app.clearList(false);
                             System.out.println("Teams reset.\n");
                         }
+                        clearScreen();
                         break;
-                    case 9:
+                    case 8:
                         choice = -1;
                         break;
                     default:
@@ -77,20 +93,26 @@ public class App {
                 System.out.println("Invalid input. Please enter a number between 1 and 9.");
                 in.nextLine(); // Consume the invalid input
                 clearScreen();
+            } catch (NoSuchElementException e) {
+                System.out.println("No input available. Exiting.");
+                choice = -1;
             }
         }
         in.close();
     }
 
-    private static LinkedList<String> playerNames;
-    private static Random rand;
-    private static String[] team1;
-    private static String[] team2;
-    private static Boolean teamCaptainsExist;
+    private LinkedList<String> playerNames, playerTeams;
+    private Random rand;
+    private String[] team1, team2;
+    private String[] teamCaptains;
+    private Boolean teamCaptainsExist;
 
     public App() {
+        playerTeams = new LinkedList<String>();
         playerNames = new LinkedList<String>();
         rand = new Random();
+        teamCaptainsExist = false;
+        teamCaptains = new String[2];
         team1 = new String[6];
         team2 = new String[6];
     }
@@ -99,7 +121,7 @@ public class App {
         String[] nameArray = n.split(" ");
         for (String name : nameArray) {
             playerNames.add(name);
-        }    
+        }
     }
 
     public Boolean removePlayer(String n) {
@@ -107,7 +129,7 @@ public class App {
             if (string.equalsIgnoreCase(n)) {
                 playerNames.remove(string);
                 return true;
-           }
+            }
         }
         return false;
     }
@@ -116,68 +138,111 @@ public class App {
         return playerNames;
     }
 
+    public LinkedList<String> getPlayersTeams() {
+        return playerTeams;
+    }
+
     public void clearList(boolean n) {
         if (n) {
+            if (!playerTeams.isEmpty()) {
+                playerNames.addAll(playerTeams);
+                playerTeams.clear();
+                team1 = new String[6];
+                team2 = new String[6];
+            }
+            if (teamCaptainsExist) {
+                teamCaptainsExist = false;
+                teamCaptains = new String[2];
+            }
             playerNames.clear();
         } else {
+            playerNames.addAll(playerTeams);
+            playerTeams.clear();
+            teamCaptainsExist = false;
             team1 = new String[6];
             team2 = new String[6];
         }
     }
 
     public void teamCaptainRoll() {
-        
-        teamCaptainsExist = true;
+        if (teamCaptainsExist) {
+            System.out.println("Team captains have already been rolled.");
+            System.out.println("Would you like to roll again? (y/n)");
+            @SuppressWarnings("resource")
+            Scanner in = new Scanner(System.in);
+            String choice = in.nextLine();
+            if (choice.equalsIgnoreCase("y")) {
+                int count = playerNames.size();
+                for (int i = 0; i < 2; i++) {
+                    teamCaptains[i] = playerNames.get(rand.nextInt(count));
+                    playerNames.remove(teamCaptains[i]);
+                    count--;
+                }
+            }
+        } else {
+            int count = playerNames.size();
+            for (int i = 0; i < 2; i++) {
+                teamCaptains[i] = playerNames.get(rand.nextInt(count));
+                playerNames.remove(teamCaptains[i]);
+                count--;
+            }
+            teamCaptainsExist = true;
+        }
+    }
+
+    public String getTeamCaptains(int n) {
+        if (n == 1) {
+            return teamCaptains[0];
+        } else {
+            return teamCaptains[1];
+        }
+    }
+
+    public Boolean getTeamCaptainsExist() {
+        return teamCaptainsExist;
     }
 
     public void chooseTeams() {
         Scanner in = new Scanner(System.in);
         if (team1[0] != null && (team1[5] != null || team2[5] != null)) {
             System.out.println("Teams are already set.");
-            System.out.println("Would you like to randomize the teams again? (y/n)");
+            System.out.println("Would you like to change the teams again? (y/n)");
             String choice = in.nextLine();
             if (choice.equalsIgnoreCase("y")) {
-                for (int i = 0; i < 6; i++) {
-                    team1[i] = null;
-                    team2[i] = null;
-                }
-                System.out.println("Would you like to randomize or choose teams? (1/2)");
+                clearList(false);
+                System.out.println("\nWould you like to randomize or choose teams? (1/2)");
                 choice = in.nextLine();
                 if (choice.equalsIgnoreCase("1")) {
                     randomizeAlgorithm();
                 } else {
-                    choiceAlgorithm();
+                    choiceAlgorithm(in);
                 }
             }
         } else {
-            choiceAlgorithm();
+            choiceAlgorithm(in);
         }
-        in.close();
         System.out.print("\033[H\033[2J");
         System.out.flush();
+        in.nextLine();
         showTeams();
     }
 
     public void randomizeTeams() {
         if (team1[0] != null && (team1[5] != null || team2[5] != null)) {
             System.out.println("Teams are already set.");
-            System.out.println("Would you like to randomize the teams again? (y/n)");
+            System.out.println("Would you like to change the teams again? (y/n)");
             Scanner in = new Scanner(System.in);
             String choice = in.nextLine();
             if (choice.equalsIgnoreCase("y")) {
-                for (int i = 0; i < 6; i++) {
-                    team1[i] = null;
-                    team2[i] = null;
-                }
+                clearList(false);
                 System.out.println("Would you like to randomize or choose teams? (1/2)");
                 choice = in.nextLine();
                 if (choice.equalsIgnoreCase("1")) {
                     randomizeAlgorithm();
                 } else {
-                    choiceAlgorithm();
+                    choiceAlgorithm(in);
                 }
             }
-            in.close();
         } else {
             randomizeAlgorithm();
         }
@@ -188,125 +253,196 @@ public class App {
 
     public void randomizeAlgorithm() {
         int t1 = 0, t2 = 0, count = playerNames.size();
+        int maxPlayers = Math.min(playerNames.size(), 12);
 
-        LinkedList<String> temp = new LinkedList<String>();
-        temp.addAll(playerNames);
+        playerTeams.addAll(playerNames);
 
-        while (t2 + t1 != playerNames.size()) {
+        while (t2 + t1 != maxPlayers) {
             int team = rand.nextInt(2);
-            String name = temp.get(rand.nextInt(count));
+            String name = playerTeams.get(rand.nextInt(count));
             if (team == 1) {
                 if (t1 < team1.length) {
                     team1[t1++] = name;
-                } else {
+                } else if (t2 < team2.length) {
                     team2[t2++] = name;
                 }
             } else {
                 if (t2 < team2.length) {
                     team2[t2++] = name;
-                } else {
+                } else if (t1 < team1.length) {
                     team1[t1++] = name;
                 }
             }
             count--;
-            temp.remove(name);
+            playerNames.remove(name);
+            playerTeams.remove(name);
+        }
+        playerTeams.clear();
+        for (String string : team1) {
+            playerTeams.add(string);
+        }
+        for (String string : team2) {
+            playerTeams.add(string);
         }
     }
 
-    public void choiceAlgorithm() {
-        try (Scanner in = new Scanner(System.in)) {
-            for (int i = 0; i < 12; i++) {
+    public void choiceAlgorithm(Scanner in) {
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
+        if (!teamCaptainsExist) {
+            System.out.println("Would you like to roll team captains? (y/n)");
+            String choice = in.nextLine();
+            if (choice.equalsIgnoreCase("y")) {
+                teamCaptainRoll();
+                actualChoiceAlgorithm(in);
+            } else {
+                actualChoiceAlgorithm(in);
+            }
+        } else {
+            actualChoiceAlgorithm(in);
+        }
+    }
+
+    public void actualChoiceAlgorithm(Scanner in) {
+        if (teamCaptainsExist) {
+
+            team1[0] = teamCaptains[0];
+            team2[0] = teamCaptains[1];
+
+            for (int i = 2; i < 12; i++) {
                 System.out.print("Current Players: ");
-                for (String s : playerNames) {
-                    System.out.print(s + ", ");
+                for (int j = 0; j < playerNames.size(); j++) {
+                    if (j == playerNames.size() - 1) {
+                        System.out.print(playerNames.get(j));
+                    } else {
+                        System.out.print(playerNames.get(j) + ", ");
+                    }
                 }
-                System.out.println("Current Teams:");
+                System.out.print("\n");
+    
                 System.out.println("Team 1: ");
-                for (String string : team1) {
-                    System.out.print(string + ", ");
-                    
+                for (int j = 0; j < team1.length; j++) {
+                    if (j == 5) {
+                        System.out.print(team1[j]);
+                    } else {
+                        System.out.print(team1[j] + ", ");
+                    }
                 }
+                System.out.print("\n");
+    
                 System.out.println("Team 2: ");
-                for (String string : team2) {
-                    System.out.print(string + ", ");
+                for (int j = 0; j < team2.length; j++) {
+                    if (j == 5) {
+                        System.out.print(team2[j]);
+                    } else {
+                        System.out.print(team2[j] + ", ");
+                    }
                 }
-                System.out.println();
-                
-                System.out.print("Enter player (Team " + (i + 1) + ") >> ");
+                System.out.print("\n");
+    
+                System.out.print("Enter player (Team " + ((i % 2) + 1) + ") >> ");
                 String name = in.nextLine();
+                while (!playerNames.contains(name)) {
+                    System.out.println("Player not found in list.");
+                    System.out.print("Enter player (Team " + ((i % 2) + 1) + ") >> ");
+                    name = in.nextLine();
+                }
                 if (i % 2 == 0) {
                     team1[i / 2] = name;
                 } else {
                     team2[i / 2] = name;
                 }
+                playerNames.remove(name);
+                playerTeams.add(name);
+                System.out.print("\033[H\033[2J");
+                System.out.flush();
+            }
+        } else {
+            for (int i = 0; i < 12; i++) {
+                System.out.print("Current Players: ");
+                for (int j = 0; j < playerNames.size(); j++) {
+                    if (j == playerNames.size() - 1) {
+                        System.out.print(playerNames.get(j));
+                    } else {
+                        System.out.print(playerNames.get(j) + ", ");
+                    }
+                }
                 System.out.println();
+    
+                System.out.println("Current Teams:");
+                System.out.println("Team 1: ");
+                for (int j = 0; j < team1.length; j++) {
+                    if (j == 5) {
+                        System.out.print(team1[j]);
+                    } else {
+                        System.out.print(team1[j] + ", ");
+                    }
+                }
+                System.out.println();
+    
+                System.out.println("Team 2: ");
+                for (int j = 0; j < team2.length; j++) {
+                    if (j == 5) {
+                        System.out.print(team2[j]);
+                    } else {
+                        System.out.print(team2[j] + ", ");
+                    }
+                }
+                System.out.println();
+    
+                System.out.print("Enter player (Team " + ((i % 2) + 1) + ") >> ");
+                String name = in.nextLine();
+                while (!playerNames.contains(name)) {
+                    System.out.println("Player not found in list.");
+                    System.out.print("Enter player (Team " + ((i % 2) + 1) + ") >> ");
+                    name = in.nextLine();
+                }
+                if (i % 2 == 0) {
+                    team1[i / 2] = name;
+                } else {
+                    team2[i / 2] = name;
+                }
+                playerNames.remove(name);
+                playerTeams.add(name);
+                System.out.print("\033[H\033[2J");
+                System.out.flush();
             }
         }
     }
 
     public void showTeams() {
-        System.out.println("\nCurrent Teams:\n");
+        System.out.println("Current Teams:\n");
         if (team1[0] == null && team2[0] == null) {
             System.out.println("No teams have been set.");
-        } else if (team1[0] == null) {
-            printTable(2);
-        } else if (team2[0] == null) {
-            printTable(3);
         } else {
             printTable(1);
         }
+        clearScreen(); // Call clearScreen after showing teams
     }
 
     public void printTable(int n) {
-        if (n == 1) {
-            String[] columnNames = { "Team 1", "Team 2" };
-            Table t = new Table(2, BorderStyle.UNICODE_BOX_HEAVY_BORDER, ShownBorders.ALL);
-    
-            t.addCell(columnNames[0]);
-            t.addCell(columnNames[1]);
-    
-            for (int i = 0; i < 6; i++) {
-                t.addCell(team1[i] != null ? team1[i] : "N/A");
-                t.addCell(team2[i] != null ? team2[i] : "N/A");
-            }
-    
-            System.out.println(t.render());
+        String[] columnNames = { "Team 1", "Team 2" };
+        Table t = new Table(2, BorderStyle.UNICODE_BOX_HEAVY_BORDER, ShownBorders.ALL);
+
+        t.addCell(columnNames[0]);
+        t.addCell(columnNames[1]);
+
+        for (int i = 0; i < 6; i++) {
+            t.addCell(team1[i] != null ? team1[i] : "N/A");
+            t.addCell(team2[i] != null ? team2[i] : "N/A");
         }
-        if (n == 2) {
-            String[] columnNames = { "Team 1", "Team 2" };
-            Table t = new Table(2, BorderStyle.UNICODE_BOX_HEAVY_BORDER, ShownBorders.ALL);
-    
-            t.addCell(columnNames[0]);
-            t.addCell(columnNames[1]);
-    
-            for (int i = 0; i < 6; i++) {
-                t.addCell(team1[i] != null ? team1[i] : "N/A");
-                t.addCell("N/A");
-            }
-    
-            System.out.println(t.render());
-        }
-        if (n == 3) {
-            String[] columnNames = { "Team 1", "Team 2" };
-            Table t = new Table(2, BorderStyle.UNICODE_BOX_HEAVY_BORDER, ShownBorders.ALL);
-    
-            t.addCell(columnNames[0]);
-            t.addCell(columnNames[1]);
-    
-            for (int i = 0; i < 6; i++) {
-                t.addCell("N/A");
-                t.addCell(team2[i] != null ? team2[i] : "N/A");
-            }
-    
-            System.out.println(t.render());
-        }
+
+        System.out.println(t.render());
     }
 
+    @SuppressWarnings("resource")
     public static void clearScreen() {
-        @SuppressWarnings("resource")
-        Scanner in = new Scanner(System.in);
         System.out.println("Press Enter to continue...");
-        in.nextLine();
+        try {
+            new Scanner(System.in).nextLine(); // Wait for user to press Enter
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         System.out.print("\033[H\033[2J");
         System.out.flush();
     }
