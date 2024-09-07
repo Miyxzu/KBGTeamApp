@@ -10,36 +10,83 @@ public class App {
         App app = new App();
         int choice = 0;
         Scanner in = new Scanner(System.in);
+        System.out.println("Welcome to the Kivotos Battlegrounds Team App\n");
         while (choice != -1) {
-            System.out.print("Welcome to the Kivotos Battlegrounds Team App\n\n" +
-                    "1) Add Players\n" +
+            System.out.print("Current Players:\n" + app.getPlayers() + "\n\n1) Add Players\n" +
                     "2) Remove Players\n" +
-                    "3) Clear Players / Reset Teams\n" +
-                    "4) Show Teams\n" +
-                    "5) Add Song\n" +
-                    "6) Edit Song\n" +
+                    "3) Randomize Teams\n" +
+                    "4) Choose Teams\n" +
+                    "5) Show Teams\n" +
+                    "6) Clear Players / Reset Teams\n" +
                     "7) Remove Song\n" +
                     "8) Sort Playlist\n" +
                     "9) Exit\n" +
                     ">> ");
-            String name;
-            choice = in.nextInt();
-            switch (choice) {
-                case 9:
-                    choice = -1;
-                    break;
-                default:
-                    System.out.println("Invalid choice");
+            try {
+                choice = in.nextInt();
+                in.nextLine(); // Consume the newline character
+                switch (choice) {
+                    case 1:
+                        System.out.print("Enter player names separated by spaces >> ");
+                        app.addPlayers(in.nextLine());
+                        System.out.println("Players added to List.\n");
+                        clearScreen();
+                        break;
+                    case 2:
+                        System.out.print("Current Players: ");
+                        for (String s : app.getPlayers()) {
+                            System.out.print(s + ", ");
+                        }
+                        System.out.print("\nEnter player name to remove >> ");
+                        String name = in.nextLine();
+                        if (app.removePlayer(name)) {
+                            System.out.println(name + " removed from List.\n");
+                        } else {
+                            System.out.println(name + " not found in List.\n");
+                        }
+                        clearScreen();
+                        break;
+                    case 3:
+                        app.randomizeTeams();
+                        clearScreen();
+                        break;
+                    case 5:
+                        app.showTeams();
+                        clearScreen();
+                        break;
+                    case 6:
+                        System.out.print("Would you like to clear the player list or reset the teams? (1/2) >> ");
+                        int n = in.nextInt();
+                        in.nextLine(); // Consume the newline character
+                        if (n == 1) {
+                            app.clearList(true);
+                            System.out.println("Player list cleared.\n");
+                        } else {
+                            app.clearList(false);
+                            System.out.println("Teams reset.\n");
+                        }
+                        break;
+                    case 9:
+                        choice = -1;
+                        break;
+                    default:
+                        System.out.println("Invalid choice");
+                        clearScreen();
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a number between 1 and 9.");
+                in.nextLine(); // Consume the invalid input
+                clearScreen();
             }
         }
         in.close();
-
     }
 
     private static LinkedList<String> playerNames;
     private static Random rand;
     private static String[] team1;
     private static String[] team2;
+    private static Boolean teamCaptainsExist;
 
     public App() {
         playerNames = new LinkedList<String>();
@@ -48,18 +95,24 @@ public class App {
         team2 = new String[6];
     }
 
-    public void addNames(String n) {
+    public void addPlayers(String n) {
         String[] nameArray = n.split(" ");
         for (String name : nameArray) {
             playerNames.add(name);
         }    
     }
 
-    public void removeName(String n) {
-        playerNames.remove(n);
+    public Boolean removePlayer(String n) {
+        for (String string : playerNames) {
+            if (string.equalsIgnoreCase(n)) {
+                playerNames.remove(string);
+                return true;
+           }
+        }
+        return false;
     }
 
-    public LinkedList<String> getNames() {
+    public LinkedList<String> getPlayers() {
         return playerNames;
     }
 
@@ -74,6 +127,7 @@ public class App {
 
     public void teamCaptainRoll() {
         
+        teamCaptainsExist = true;
     }
 
     public void chooseTeams() {
@@ -90,57 +144,13 @@ public class App {
                 System.out.println("Would you like to randomize or choose teams? (1/2)");
                 choice = in.nextLine();
                 if (choice.equalsIgnoreCase("1")) {
-                    int t1 = 0, t2 = 0;
-
-                    while (t2 + t1 != 12) {
-                        int team = rand.nextInt(2) + 1;
-                        String name = playerNames.get(t2 + t1);
-                        if (team == 1) {
-                            if (t1 < team1.length) {
-                                team1[t1++] = name;
-                            } else {
-                                team2[t2++] = name;
-                            }
-                        } else {
-                            if (t2 < team2.length) {
-                                team2[t2++] = name;
-                            } else {
-                                team1[t1++] = name;
-                            }
-                        }
-                    }
+                    randomizeAlgorithm();
                 } else {
-                    for (int i = 0; i < 12; i++) {
-                        System.out.print("Current Players: ");
-                        for (String s : playerNames) {
-                            System.out.print(s + ", ");
-                        }
-                        System.out.println();
-                        System.out.print("Enter player (Team " + (i + 1) + ") >> ");
-                        String name = in.nextLine();
-                        if (i % 2 == 0) {
-                            team1[i / 2] = name;
-                        } else {
-                            team2[i / 2] = name;
-                        }
-                    }
+                    choiceAlgorithm();
                 }
             }
         } else {
-            for (int i = 0; i < 12; i++) {
-                System.out.print("Current Players: ");
-                for (String s : playerNames) {
-                    System.out.print(s + ", ");
-                }
-                System.out.println();
-                System.out.print("Enter player (Team " + (i + 1) + ") >> ");
-                String name = in.nextLine();
-                if (i % 2 == 0) {
-                    team1[i / 2] = name;
-                } else {
-                    team2[i / 2] = name;
-                }
-            }
+            choiceAlgorithm();
         }
         in.close();
         System.out.print("\033[H\033[2J");
@@ -162,71 +172,80 @@ public class App {
                 System.out.println("Would you like to randomize or choose teams? (1/2)");
                 choice = in.nextLine();
                 if (choice.equalsIgnoreCase("1")) {
-                    int t1 = 0, t2 = 0;
-
-                    while (t2 + t1 != 12) {
-                        int team = rand.nextInt(1, 2);
-                        String name = playerNames.get(t2 + t1);
-                        if (team == 1) {
-                            if (t1 < team1.length) {
-                                team1[t1++] = name;
-                            } else {
-                                team2[t2++] = name;
-                            }
-                        } else {
-                            if (t2 < team2.length) {
-                                team2[t2++] = name;
-                            } else {
-                                team1[t1++] = name;
-                            }
-                        }
-                    }
+                    randomizeAlgorithm();
                 } else {
-                    for (int i = 0; i < 12; i++) {
-                        System.out.print("Current Players: ");
-                        for (String s : playerNames) {
-                            System.out.print(s + ", ");
-                        }
-                        System.out.println();
-                        System.out.print("Enter player (Team " + (i + 1) + ") >> ");
-                        String name = in.nextLine();
-                        if (i % 2 == 0) {
-                            team1[i / 2] = name;
-                        } else {
-                            team2[i / 2] = name;
-                        }
-                    }
+                    choiceAlgorithm();
                 }
-                in.close();
             }
+            in.close();
         } else {
-            int t1 = 0, t2 = 0;
-
-            while (t2 + t1 != 12) {
-                int team = rand.nextInt(1, 2);
-                String name = playerNames.get(t2 + t1);
-                if (team == 1) {
-                    if (t1 < team1.length) {
-                        team1[t1++] = name;
-                    } else {
-                        team2[t2++] = name;
-                    }
-                } else {
-                    if (t2 < team2.length) {
-                        team2[t2++] = name;
-                    } else {
-                        team1[t1++] = name;
-                    }
-                }
-            }
+            randomizeAlgorithm();
         }
         System.out.print("\033[H\033[2J");
         System.out.flush();
         showTeams();
     }
 
+    public void randomizeAlgorithm() {
+        int t1 = 0, t2 = 0, count = playerNames.size();
+
+        LinkedList<String> temp = new LinkedList<String>();
+        temp.addAll(playerNames);
+
+        while (t2 + t1 != playerNames.size()) {
+            int team = rand.nextInt(2);
+            String name = temp.get(rand.nextInt(count));
+            if (team == 1) {
+                if (t1 < team1.length) {
+                    team1[t1++] = name;
+                } else {
+                    team2[t2++] = name;
+                }
+            } else {
+                if (t2 < team2.length) {
+                    team2[t2++] = name;
+                } else {
+                    team1[t1++] = name;
+                }
+            }
+            count--;
+            temp.remove(name);
+        }
+    }
+
+    public void choiceAlgorithm() {
+        try (Scanner in = new Scanner(System.in)) {
+            for (int i = 0; i < 12; i++) {
+                System.out.print("Current Players: ");
+                for (String s : playerNames) {
+                    System.out.print(s + ", ");
+                }
+                System.out.println("Current Teams:");
+                System.out.println("Team 1: ");
+                for (String string : team1) {
+                    System.out.print(string + ", ");
+                    
+                }
+                System.out.println("Team 2: ");
+                for (String string : team2) {
+                    System.out.print(string + ", ");
+                }
+                System.out.println();
+                
+                System.out.print("Enter player (Team " + (i + 1) + ") >> ");
+                String name = in.nextLine();
+                if (i % 2 == 0) {
+                    team1[i / 2] = name;
+                } else {
+                    team2[i / 2] = name;
+                }
+                System.out.println();
+            }
+        }
+    }
+
     public void showTeams() {
-        System.out.println("Current Teams:\n");
+        System.out.println("\nCurrent Teams:\n");
         if (team1[0] == null && team2[0] == null) {
             System.out.println("No teams have been set.");
         } else if (team1[0] == null) {
@@ -283,12 +302,12 @@ public class App {
         }
     }
 
-    public void clearScreen() {
+    public static void clearScreen() {
+        @SuppressWarnings("resource")
         Scanner in = new Scanner(System.in);
         System.out.println("Press Enter to continue...");
         in.nextLine();
         System.out.print("\033[H\033[2J");
         System.out.flush();
-        in.close();
     }
 }
