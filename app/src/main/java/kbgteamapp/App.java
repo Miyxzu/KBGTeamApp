@@ -24,21 +24,37 @@ public class App {
             System.out.print(
                     "\n1) Add Players\n" +
                             "2) Remove Players\n" +
-                            "3) Randomize Teams\n" +
-                            "4) Choose Teams\n" +
-                            "5) Show Teams\n" +
-                            "6) Roll Team Captains\n" +
-                            "7) Clear Players / Reset Teams\n" +
-                            "8) Exit\n" +
+                            "3) Update Players\n" +
+                            "4) Randomize Teams\n" +
+                            "5) Choose Teams\n" +
+                            "6) Show Teams\n" +
+                            "7) Roll Team Captains\n" +
+                            "8) Clear Players / Reset Teams\n" +
+                            "9) Exit\n" +
                             ">> ");
             try {
                 choice = in.nextInt();
                 in.nextLine(); // Consume the newline character
                 switch (choice) {
                     case 1:
-                        System.out.print("Enter player names separated by spaces >> ");
-                        app.addPlayers(in.nextLine());
-                        System.out.println("Players added to List.\n");
+                        boolean condition = true;
+                        while (condition) {
+                            System.out.print("\033[H\033[2J");
+                            System.out.flush();
+                            System.out.println("Current Players: " + app.getPlayers());
+                            System.out.print("Enter player name >> ");
+                            String name = in.nextLine();
+                            if (app.addPlayers(name)) {
+                                System.out.println(name + " added to List.\n");
+                            } else {
+                                System.out.println(name + " already in List.\n");
+                            }
+                            System.out.print("Would you like to add another player? (y/n) >> ");
+                            String choiceP = in.nextLine();
+                            if (!choiceP.equalsIgnoreCase("y")) {
+                                condition = false;
+                            }
+                        }
                         clearScreen();
                         break;
                     case 2:
@@ -56,20 +72,35 @@ public class App {
                         clearScreen();
                         break;
                     case 3:
-                        app.randomizeTeams();
+                        System.out.print("Current Players: ");
+                        for (String s : app.getPlayers()) {
+                            System.out.print(s + ", ");
+                        }
+                        System.out.print("\nEnter player name to update >> ");
+                        String oldName = in.nextLine();
+                        System.out.println("Enter new name >> ");
+                        String newName = in.nextLine();
+                        if (app.updatePlayer(oldName, newName)) {
+                            System.out.println(oldName + " updated to " + newName + ".\n");
+                        } else {
+                            System.out.println(oldName + " not found in List.\n");
+                        }
                         break;
                     case 4:
-                        app.chooseTeams();
+                        app.randomizeTeams();
                         break;
                     case 5:
-                        app.showTeams();
+                        app.chooseTeams();
                         break;
                     case 6:
+                        app.showTeams();
+                        break;
+                    case 7:
                         app.teamCaptainRoll();
                         System.out.println("Team Captains: " + app.getTeamCaptains(1) + " and " + app.getTeamCaptains(2));
                         clearScreen();
                         break;
-                    case 7:
+                    case 8:
                         System.out.print("Would you like to clear the player list or reset the teams? (1/2) >> ");
                         int n = in.nextInt();
                         in.nextLine(); // Consume the newline character
@@ -82,7 +113,7 @@ public class App {
                         }
                         clearScreen();
                         break;
-                    case 8:
+                    case 9:
                         choice = -1;
                         break;
                     default:
@@ -117,10 +148,20 @@ public class App {
         team2 = new String[6];
     }
 
-    public void addPlayers(String n) {
-        String[] nameArray = n.split(" ");
-        for (String name : nameArray) {
-            playerNames.add(name);
+    public Boolean addPlayers(String n) {
+        Boolean found = false;
+        for (String string : playerNames) {
+            if (string.equalsIgnoreCase(n)) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            playerNames.add(n);
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -128,6 +169,17 @@ public class App {
         for (String string : playerNames) {
             if (string.equalsIgnoreCase(n)) {
                 playerNames.remove(string);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Boolean updatePlayer(String o, String n) {
+        for (String string : playerNames) {
+            if (string.equalsIgnoreCase(o)) {
+                playerNames.remove(string);
+                playerNames.add(n);
                 return true;
             }
         }
@@ -422,7 +474,7 @@ public class App {
 
     public void printTable(int n) {
         String[] columnNames = { "Team 1", "Team 2" };
-        Table t = new Table(2, BorderStyle.UNICODE_BOX_HEAVY_BORDER, ShownBorders.ALL);
+        Table t = new Table(2, BorderStyle.DESIGN_TUBES_WIDE, ShownBorders.ALL);
 
         t.addCell(columnNames[0]);
         t.addCell(columnNames[1]);

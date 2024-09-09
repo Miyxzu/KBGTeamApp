@@ -20,9 +20,9 @@ repositories {
 
 dependencies {
     // Use JUnit Jupiter for testing.
-    testImplementation(libs.junit.jupiter)
+    // testImplementation(libs.junit.jupiter)
 
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    // testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // This dependency is used by the application.
     implementation(libs.guava)
@@ -44,6 +44,22 @@ application {
     // Define the main class for the application.
     mainClass = "kbgteamapp.App"
 }
+
+tasks.jar {
+    archiveBaseName.set("KBGTeamApp")
+    archiveVersion.set("1.1.0")
+    manifest {
+        attributes["Main-Class"] = "kbgteamapp.App"
+    }
+    from(sourceSets.main.get().output)
+
+    // Include dependencies in the JAR
+    dependsOn(configurations.runtimeClasspath)
+    from({
+        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
+    })
+}
+
 
 // tasks.named<Test>("test") {
 //     // Use JUnit Platform for unit tests.
