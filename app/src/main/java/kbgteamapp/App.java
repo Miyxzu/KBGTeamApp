@@ -78,7 +78,7 @@ public class App {
                         }
                         System.out.print("\nEnter player name to update >> ");
                         String oldName = in.nextLine();
-                        System.out.println("Enter new name >> ");
+                        System.out.print("Enter new name >> ");
                         String newName = in.nextLine();
                         if (app.updatePlayer(oldName, newName)) {
                             System.out.println(oldName + " updated to " + newName + ".\n");
