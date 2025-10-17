@@ -42,14 +42,14 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = "kbgteamapp.App"
+    mainClass = "kbgteamapp.mainCLI"
 }
 
 tasks.jar {
     archiveBaseName.set("KBGTeamApp")
     archiveVersion.set("1.1.0")
     manifest {
-        attributes["Main-Class"] = "kbgteamapp.App"
+        attributes["Main-Class"] = "kbgteamapp.mainCLI"
     }
     from(sourceSets.main.get().output)
 

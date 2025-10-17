@@ -5,132 +5,7 @@ import org.nocrala.tools.texttablefmt.BorderStyle;
 import org.nocrala.tools.texttablefmt.ShownBorders;
 import org.nocrala.tools.texttablefmt.Table;
 
-public class App {
-    public static void main(String[] args) {
-        App app = new App();
-        int choice = 0;
-        Scanner in = new Scanner(System.in);
-        System.out.println("Welcome to the Kivotos Battlegrounds Team App");
-        while (choice != -1) {
-            if (!app.getPlayers().isEmpty()) {
-                System.out.print("Current Players:\n" + app.getPlayers() + "\n");
-            }
-            if (!app.getPlayersTeams().isEmpty()) {
-                System.out.print("Current Players in Teams:\n" + app.getPlayersTeams() + "\n");
-            }
-            if (app.getTeamCaptainsExist()) {
-                System.out.println("Team Captains: " + app.getTeamCaptains(1) + " and " + app.getTeamCaptains(2));
-            }
-            System.out.print(
-                    "\n1) Add Players\n" +
-                            "2) Remove Players\n" +
-                            "3) Update Players\n" +
-                            "4) Randomize Teams\n" +
-                            "5) Choose Teams\n" +
-                            "6) Show Teams\n" +
-                            "7) Roll Team Captains\n" +
-                            "8) Clear Players / Reset Teams\n" +
-                            "9) Exit\n" +
-                            ">> ");
-            try {
-                choice = in.nextInt();
-                in.nextLine(); // Consume the newline character
-                switch (choice) {
-                    case 1:
-                        boolean condition = true;
-                        while (condition) {
-                            System.out.print("\033[H\033[2J");
-                            System.out.flush();
-                            System.out.println("Current Players: " + app.getPlayers());
-                            System.out.print("Enter player name >> ");
-                            String name = in.nextLine();
-                            if (app.addPlayers(name)) {
-                                System.out.println(name + " added to List.\n");
-                            } else {
-                                System.out.println(name + " already in List.\n");
-                            }
-                            System.out.print("Would you like to add another player? (y/n) >> ");
-                            String choiceP = in.nextLine();
-                            if (!choiceP.equalsIgnoreCase("y")) {
-                                condition = false;
-                            }
-                        }
-                        clearScreen();
-                        break;
-                    case 2:
-                        System.out.print("Current Players: ");
-                        for (String s : app.getPlayers()) {
-                            System.out.print(s + ", ");
-                        }
-                        System.out.print("\nEnter player name to remove >> ");
-                        String name = in.nextLine();
-                        if (app.removePlayer(name)) {
-                            System.out.println(name + " removed from List.\n");
-                        } else {
-                            System.out.println(name + " not found in List.\n");
-                        }
-                        clearScreen();
-                        break;
-                    case 3:
-                        System.out.print("Current Players: ");
-                        for (String s : app.getPlayers()) {
-                            System.out.print(s + ", ");
-                        }
-                        System.out.print("\nEnter player name to update >> ");
-                        String oldName = in.nextLine();
-                        System.out.print("Enter new name >> ");
-                        String newName = in.nextLine();
-                        if (app.updatePlayer(oldName, newName)) {
-                            System.out.println(oldName + " updated to " + newName + ".\n");
-                        } else {
-                            System.out.println(oldName + " not found in List.\n");
-                        }
-                        break;
-                    case 4:
-                        app.randomizeTeams();
-                        break;
-                    case 5:
-                        app.chooseTeams();
-                        break;
-                    case 6:
-                        app.showTeams();
-                        break;
-                    case 7:
-                        app.teamCaptainRoll();
-                        System.out.println("Team Captains: " + app.getTeamCaptains(1) + " and " + app.getTeamCaptains(2));
-                        clearScreen();
-                        break;
-                    case 8:
-                        System.out.print("Would you like to clear the player list or reset the teams? (1/2) >> ");
-                        int n = in.nextInt();
-                        in.nextLine(); // Consume the newline character
-                        if (n == 1) {
-                            app.clearList(true);
-                            System.out.println("Player list cleared.\n");
-                        } else {
-                            app.clearList(false);
-                            System.out.println("Teams reset.\n");
-                        }
-                        clearScreen();
-                        break;
-                    case 9:
-                        choice = -1;
-                        break;
-                    default:
-                        System.out.println("Invalid choice");
-                        clearScreen();
-                }
-            } catch (InputMismatchException e) {
-                System.out.println("Invalid input. Please enter a number between 1 and 9.");
-                in.nextLine(); // Consume the invalid input
-                clearScreen();
-            } catch (NoSuchElementException e) {
-                System.out.println("No input available. Exiting.");
-                choice = -1;
-            }
-        }
-        in.close();
-    }
+public class kbgTeam {
 
     private LinkedList<String> playerNames, playerTeams;
     private Random rand;
@@ -138,7 +13,7 @@ public class App {
     private String[] teamCaptains;
     private Boolean teamCaptainsExist;
 
-    public App() {
+    public kbgTeam() {
         playerTeams = new LinkedList<String>();
         playerNames = new LinkedList<String>();
         rand = new Random();
@@ -157,12 +32,11 @@ public class App {
             }
         }
 
-        if (!found) {
-            playerNames.add(n);
-            return true;
-        } else {
+        if (found) {
             return false;
         }
+        playerNames.add(n);
+        return true;
     }
 
     public Boolean removePlayer(String n) {
@@ -195,25 +69,24 @@ public class App {
     }
 
     public void clearList(boolean n) {
-        if (n) {
-            if (!playerTeams.isEmpty()) {
-                playerNames.addAll(playerTeams);
-                playerTeams.clear();
-                team1 = new String[6];
-                team2 = new String[6];
-            }
-            if (teamCaptainsExist) {
-                teamCaptainsExist = false;
-                teamCaptains = new String[2];
-            }
-            playerNames.clear();
-        } else {
+        if (!n) {
             playerNames.addAll(playerTeams);
             playerTeams.clear();
             teamCaptainsExist = false;
             team1 = new String[6];
             team2 = new String[6];
         }
+        if (!playerTeams.isEmpty()) {
+            playerNames.addAll(playerTeams);
+            playerTeams.clear();
+            team1 = new String[6];
+            team2 = new String[6];
+        }
+        if (teamCaptainsExist) {
+            teamCaptainsExist = false;
+            teamCaptains = new String[2];
+        }
+        playerNames.clear();
     }
 
     public void teamCaptainRoll() {
@@ -232,6 +105,9 @@ public class App {
                 }
             }
         } else {
+            if (playerNames.size() < 2) {
+                System.out.println("There are less than 2 players, team captains cannot be rolled.");
+            }
             int count = playerNames.size();
             for (int i = 0; i < 2; i++) {
                 teamCaptains[i] = playerNames.get(rand.nextInt(count));
@@ -304,38 +180,28 @@ public class App {
     }
 
     public void randomizeAlgorithm() {
-        int t1 = 0, t2 = 0, count = playerNames.size();
-        int maxPlayers = Math.min(playerNames.size(), 12);
-
-        playerTeams.addAll(playerNames);
-
-        while (t2 + t1 != maxPlayers) {
-            int team = rand.nextInt(2);
-            String name = playerTeams.get(rand.nextInt(count));
-            if (team == 1) {
-                if (t1 < team1.length) {
-                    team1[t1++] = name;
-                } else if (t2 < team2.length) {
-                    team2[t2++] = name;
-                }
-            } else {
-                if (t2 < team2.length) {
-                    team2[t2++] = name;
-                } else if (t1 < team1.length) {
-                    team1[t1++] = name;
-                }
-            }
-            count--;
-            playerNames.remove(name);
-            playerTeams.remove(name);
-        }
+        int count = Math.min(playerNames.size(), 12);
+        ArrayList<String> tempPlayers = new ArrayList<>(playerNames);
+        
+        // Clear previous teams
         playerTeams.clear();
-        for (String string : team1) {
-            playerTeams.add(string);
+        Arrays.fill(team1, null);
+        Arrays.fill(team2, null);
+
+        // Fill teams evenly
+        for (int i = 0; i < count; i++) {
+            int index = rand.nextInt(tempPlayers.size());
+            String player = tempPlayers.remove(index);
+            playerTeams.add(player);
+            
+            if (i % 2 == 0) {
+                team1[i/2] = player;
+            } else {
+                team2[i/2] = player;
+            }
         }
-        for (String string : team2) {
-            playerTeams.add(string);
-        }
+        
+        playerNames.removeAll(playerTeams);
     }
 
     public void choiceAlgorithm(Scanner in) {
@@ -371,7 +237,7 @@ public class App {
                     }
                 }
                 System.out.print("\n");
-    
+
                 System.out.println("Team 1: ");
                 for (int j = 0; j < team1.length; j++) {
                     if (j == 5) {
@@ -381,7 +247,7 @@ public class App {
                     }
                 }
                 System.out.print("\n");
-    
+
                 System.out.println("Team 2: ");
                 for (int j = 0; j < team2.length; j++) {
                     if (j == 5) {
@@ -391,7 +257,7 @@ public class App {
                     }
                 }
                 System.out.print("\n");
-    
+
                 System.out.print("Enter player (Team " + ((i % 2) + 1) + ") >> ");
                 String name = in.nextLine();
                 while (!playerNames.contains(name)) {
@@ -420,7 +286,7 @@ public class App {
                     }
                 }
                 System.out.println();
-    
+
                 System.out.println("Current Teams:");
                 System.out.println("Team 1: ");
                 for (int j = 0; j < team1.length; j++) {
@@ -431,7 +297,7 @@ public class App {
                     }
                 }
                 System.out.println();
-    
+
                 System.out.println("Team 2: ");
                 for (int j = 0; j < team2.length; j++) {
                     if (j == 5) {
@@ -441,7 +307,7 @@ public class App {
                     }
                 }
                 System.out.println();
-    
+
                 System.out.print("Enter player (Team " + ((i % 2) + 1) + ") >> ");
                 String name = in.nextLine();
                 while (!playerNames.contains(name)) {
